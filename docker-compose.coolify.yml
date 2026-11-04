@@ -1,0 +1,74 @@
+# ---- Coolify deployment ----
+# Coolify provides HTTPS + reverse proxy. Create a "Docker Compose" resource pointing
+# at this file, set the environment variables in the Coolify UI, give the `mcp`
+# service a domain on port 8000, and Deploy. Persistent storage: volume tg-data -> /data.
+services:
+  mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      # Required (set in Coolify → Environment Variables):
+      - TG_API_ID=${TG_API_ID}
+      - TG_API_HASH=${TG_API_HASH}
+      - PUBLIC_BASE_URL=${PUBLIC_BASE_URL}
+      - APP_SECRET_KEY=${APP_SECRET_KEY}
+      # Brain / AI (optional; local-first defaults need an Ollama host):
+      - LLM_PROVIDER=${LLM_PROVIDER:-gemini}
+      - LLM_MODEL=${LLM_MODEL:-gemini-2.5-flash-lite}
+      - EMBEDDING_PROVIDER=${EMBEDDING_PROVIDER:-gemini}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-gemini-embedding-001}
+      - TRANSCRIPTION_PROVIDER=${TRANSCRIPTION_PROVIDER:-gemini}
+      - TRANSCRIPTION_MODEL=${TRANSCRIPTION_MODEL:-gemini-2.5-flash-lite}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-}
+      # Optional:
+      - ALLOWED_PHONES=${ALLOWED_PHONES:-}
+      - APP_NAME=${APP_NAME:-Telegram MCP}
+      # Fixed:
+      - DATA_DIR=/data
+      - MCP_HOST=0.0.0.0
+      - MCP_PORT=8000
+    volumes:
+      - tg-data:/data
+    expose:
+      - "8000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz').status==200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # Optional Telegram bot front-end for the same archive (needs TELEGRAM_BOT_TOKEN).
+  bot:
+    profiles: ["bot"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_API_ID=${TG_API_ID}
+      - TELEGRAM_API_HASH=${TG_API_HASH}
+      - SECRETS_KEY=${APP_SECRET_KEY}
+      - DATA_DIR=/data
+      - DB_PATH=/data/store.db
+      - MEDIA_DIR=/data/media
+      - LLM_PROVIDER=${LLM_PROVIDER:-gemini}
+      - LLM_MODEL=${LLM_MODEL:-gemini-2.5-flash-lite}
+      - EMBEDDING_PROVIDER=${EMBEDDING_PROVIDER:-gemini}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-gemini-embedding-001}
+      - TRANSCRIPTION_PROVIDER=${TRANSCRIPTION_PROVIDER:-gemini}
+      - TRANSCRIPTION_MODEL=${TRANSCRIPTION_MODEL:-gemini-2.5-flash-lite}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-}
+    volumes:
+      - tg-data:/data
+    restart: unless-stopped
+    command: ["python", "-m", "telegram_notebook.bot"]
+
+volumes:
+  tg-data:

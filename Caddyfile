@@ -1,0 +1,5 @@
+# Replace mcp.example.com with YOUR domain (an A record pointing to this server).
+# Caddy fetches a free Let's Encrypt certificate automatically.
+mcp.example.com {
+    reverse_proxy mcp:8000
+}

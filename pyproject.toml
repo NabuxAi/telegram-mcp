@@ -1,0 +1,7 @@
+[tool.pytest.ini_options]
+testpaths = ["tests", "test_server.py"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 140
+target-version = "py311"

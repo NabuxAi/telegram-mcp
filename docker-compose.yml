@@ -1,0 +1,54 @@
+# Local / plain-VPS deployment: MCP server + Caddy (automatic HTTPS).
+# Optional Telegram bot worker: `docker compose --profile bot up -d`
+services:
+  mcp:
+    build: .
+    env_file: .env
+    environment:
+      - DATA_DIR=/data
+      - MCP_HOST=0.0.0.0
+      - MCP_PORT=8000
+    volumes:
+      - ./data:/data
+    restart: unless-stopped
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz').status==200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  bot:
+    profiles: ["bot"]
+    build: .
+    env_file: .env
+    environment:
+      - DATA_DIR=/data
+      - DB_PATH=/data/store.db
+      - MEDIA_DIR=/data/media
+      - TELEGRAM_API_ID=${TG_API_ID}
+      - TELEGRAM_API_HASH=${TG_API_HASH}
+      - SECRETS_KEY=${APP_SECRET_KEY}
+    volumes:
+      - ./data:/data
+    restart: unless-stopped
+    command: ["python", "-m", "telegram_notebook.bot"]
+
+  caddy:
+    image: caddy:2
+    depends_on:
+      - mcp
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:

@@ -1,0 +1,20 @@
+# --- MCP server / Telegram ---
+mcp>=1.26.0,<2
+telethon>=1.42.0
+cryptg>=0.4.0            # native MTProto crypto — big speedup on media transfers
+cryptography>=42.0       # Fernet: encrypts Telegram sessions at rest
+pydantic>=2.11
+httpx>=0.27.0
+uvicorn>=0.30.0
+python-multipart>=0.0.9  # HTML form parsing for the login/dashboard pages
+python-socks[asyncio]    # optional Telegram proxy support
+# --- Notebook brain (telegram_notebook package) ---
+python-dotenv>=1.0.1
+openai>=1.75.0
+google-genai==1.66.0
+requests>=2.31
+certifi
+telegramify-markdown>=1.2.0
+# Optional extras (heavy): local Whisper transcription / podcast generation
+#   pip install faster-whisper      # TRANSCRIPTION_PROVIDER=local
+#   pip install podcastfy           # /podcast in the bot

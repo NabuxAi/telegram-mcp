@@ -1,0 +1,29 @@
+name: Test Telegram MCP
+
+on:
+  pull_request:
+    paths:
+      - "app/**"
+      - "tests/**"
+      - "test_server.py"
+      - "requirements.txt"
+      - ".github/workflows/test-telegram-mcp.yml"
+  workflow_dispatch:
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt pytest
+      - name: Run forum and related offline tests
+        run: python -m pytest -q tests/test_forum_topics.py tests/test_forum_management.py tests/test_multi_account.py tests/test_gateway_wiring.py tests/notebook
