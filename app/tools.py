@@ -378,7 +378,7 @@ def register(mcp: FastMCP, pool: ClientPool) -> None:
         ent = await resolve(en, chat)
         _require_forum_manager(ent)
         existing = await guarded(en, lambda: en.client(functions.messages.GetForumTopicsRequest(
-            peer=ent, q=name, offset_date=None, offset_id=0, offset_topic=0, limit=100)))
+            peer=ent, q=name, offset_date=0, offset_id=0, offset_topic=0, limit=100)))
         if any(isinstance(t, types.ForumTopic) and t.title.strip().casefold() == name.casefold()
                for t in existing.topics):
             raise ValueError("A forum topic with the same title already exists; use telegram_list_forum_topics.")
