@@ -123,6 +123,10 @@ def test_create_returns_root_id_and_rejects_duplicate(forum):
     run, _, client = forum
     res = run("telegram_create_forum_topic", title="   AI lessons   ")
     assert res["ok"] and res["topic_id"] == 88 and res["title"] == "AI lessons"
+    from app import tools
+    topic_lookup = next(r for r in client.requests
+                        if isinstance(r, tools.functions.messages.GetForumTopicsRequest))
+    assert topic_lookup.offset_date == 0  # Telegram requires an integer, not None.
     assert len(client.topics) == 2
     again = run("telegram_create_forum_topic", title="ai LESSONS")
     assert not again["ok"] and "already exists" in again["error"]
